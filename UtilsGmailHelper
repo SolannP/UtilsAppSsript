@@ -1,0 +1,24 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/** [ ! ] READ ME
+ * Those functions are made for providing a convenint way to send email.
+ * It use MailApp object an thus allow only to writte (send email), you cannot acces email.
+ * Feel free to add feature and improve code on https://github.com/SolannP/UtilsAppSsript
+ */
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/** Function for send an email using perosnal account.
+ * @param {string} to as recipient, if several must be separate using coma (,)
+ * @param {string} subject as subject of email
+ * @param {string} htmlBody the content of the email as html. Image cannot be added
+ * @author Solann Puygrenier <spuygrenier@fmlogistic.com>
+ * @see {@link //https://developers.google.com/apps-script/reference/mail/mail-app#sendEmail(String,String,String,Object)}
+ */
+function sendMail(to,subject,cc,htmlBody){
+  MailApp.sendEmail({
+    to:to,
+    subject: subject,
+    cc:cc,
+    htmlBody:htmlBody,
+  });
+}
