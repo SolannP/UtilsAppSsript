@@ -248,7 +248,7 @@ function UnitTest(){
   test.create("getTableWhereColumn",valueTable2.getTableWhereColumn("User").columnFilter[0].index,"2");
 
   test.create("matchValue",(new TableWithHeaderHelper(table)).getTableWhereColumn("User").matchValue("me@gmail.com").dataMatchingList.length,3);
-  test.create("matchValue",valueTable.getgetTableWhereColumn("User").matchValue("baba@rhum.com").length(),1);
+  test.create("matchValue",valueTable.getTableWhereColumn("User").matchValue("baba@rhum.com").length(),1);
   test.create("matchValue",valueTable.getTableWhereColumn("User").matchValue("baba@rhum.com").dataMatchingList[0].getValues()[0].toString(),"109,WDP-456,baba@rhum.com");
 
   test.create("matchValue",valueTable2.getTableWhereColumn("User").matchValue("me@gmail.com").length(),3);
