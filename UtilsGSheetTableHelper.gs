@@ -17,7 +17,7 @@
  * var table = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("A1").getDataRegion();
  * var filterTable = new TableWithHeaderHelper(table).getTableWhereColumn("State").matchValue("In progress");
  * for(var i=0 ; i < filterTable.length() ; i++){
- *  var rangeCell = filterTable.getCellWithinColumn("User").atRow(i)
+ *  var rangeCell = filterTable.getWithinColumn("User").cellAtRow(i)
  *  ... do watever you want with the cell @see {@link https://developers.google.com/apps-script/reference/spreadsheet/range}
  * }
  * ```
@@ -132,11 +132,31 @@ class TableWithHeaderHelper{
   length(){
     return this.dataMatchingList.length;
   }
+  /**
+   * Return the number of column
+   */
+  width(){
+   return this.range.getWidth()
+  }
+  /**
+   * Append at the end a the provided row range, width must be the same
+   * @return {Range} a row range @see {@link https://developers.google.com/apps-script/reference/spreadsheet/range}
+   */
+  addNewEntry(range){
+    if(range.getWidth() != this.width()) throw Error(`The range to add is not the same dimension than this table`);
+    //this.range.getSheet()
+    var newRowToFill = this.subRangeRow(this.length()+1);
+    
+    newRowToFill.setValues(range.getValues());
+    this.dataRowList.push(newRowToFill);
+    this.dataMatchingList.push(newRowToFill);
+    return this;
+  }
 
   /** Next selection will be based on column title title of one column header. To be chained by a at function
   * @param {string} columnTitle the exact corresponding title
   */
-  getCellWithinColumn(columnTitle){
+  getWithinColumn(columnTitle){
     return this.getTableWhereColumn(columnTitle)
   }
 
@@ -145,10 +165,19 @@ class TableWithHeaderHelper{
    * @param {number} index starting at 0
    * @return {Range} 1 range cell at the given index @see {@link https://developers.google.com/apps-script/reference/spreadsheet/range}
    */
-  atRow(index){
+  cellAtRow(index){
     var colunIndex = this.columnFilter[0].index
-    if(this.length() <= index) throw Error(`index ${index} is not among possible value`)
+    if(index >= this.length()) throw Error(`index ${index} is not among possible value`)
     return this.dataMatchingList[index].getCell(1,colunIndex+1);
+  }
+  /**
+   * a row range of the matching result at the given index
+   * @param {number} index starting at 0
+   * @return {Range} a row range at the given index @see {@link https://developers.google.com/apps-script/reference/spreadsheet/range}
+   */
+  getRow(index){
+    if(index >= this.length() || index < 0) throw Error(`index ${index} is not among possible value`)
+    return this.dataMatchingList[index]
   }
 
   /** First row as int starting at 0 relativ to the whole sheet
@@ -220,15 +249,19 @@ function UnitTest(){
   var table = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("B2").getDataRegion();
   var table2 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("H12").getDataRegion();
   var table3 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("O3").getDataRegion();
+  var table4 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("M12").getDataRegion();
 
   var valueTable = new TableWithHeaderHelper(table);
   var valueTable2 = new TableWithHeaderHelper(table2);
+  var valueTable4 = new TableWithHeaderHelper(table4);
   var test = new BasicTesting()
 
   test.create("getOffsetRow",valueTable.getOffsetRow(),"0")
   test.create("getOffsetRow",valueTable2.getOffsetRow(),"11")
   test.create("getOffsetColumn",valueTable.getOffsetColumn(),"0")
   test.create("getOffsetColumn",valueTable2.getOffsetColumn(),"7")
+
+  test.create("width",valueTable.width(),3);
 
   test.create("headerRange",valueTable.headerRange.getValues()[0][0],'State')
   test.create("headerRange",valueTable.headerRange.getValues()[0][2],'User')
@@ -280,7 +313,21 @@ function UnitTest(){
   test.create("get Cell",
     valueTable.getTableWhereColumn("State").matchValue("110")
               .getTableWhereColumn("User").matchValue("jacky@gmail.com")
-              .getCellWithinColumn("User").atRow(0).getValue(),"jacky@gmail.com");
+              .getWithinColumn("User").cellAtRow(0).getValue(),"jacky@gmail.com");
+
+  test.create("get Cell",
+    valueTable.getTableWhereColumn("State").matchValue("1")
+              .getWithinColumn("User").cellAtRow(1).getValue(),"other@gmail.com");
+
+  test.create("get Row",
+      valueTable.getTableWhereColumn("State").matchValue("110").getRow(0).getValues(),"110,WDP-002,baba@rhum.com,me@gmail.com");
+
+//valueTable4
+  var rowRange = valueTable2.getTableWhereColumn("State").matchValue("109").getRow(0);
+  valueTable4.addNewEntry(rowRange);
+  test.create("Add Entry",valueTable4.getTableWhereColumn("State").matchValue("109").getWithinColumn("User").cellAtRow(0).getValue(),"baba@rhum.com");
+  // reset value
+  SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("M23:O23").clear();
 
   try{ valueTable.getTableWhereColumn("456987fds!:;"); test.create("error getTableWhereColumn","succes","error");
   }catch {test.create("error getTableWhereColumn","error","error")}
