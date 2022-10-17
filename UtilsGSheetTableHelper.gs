@@ -31,6 +31,14 @@
  *                          .getTableWhereColumn("Price").matchPredicate( (x) => ( x > 1000));
  * ```
  * 
+ * @exemple add value
+ * ```
+ * var table = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("A1").getDataRegion();
+ * var helperTable = new TableWithHeaderHelper(table).;
+ * var rowRange = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("A99;B99")
+ * var helperTable.addNewEntry(rowRange);
+ * var helperTable.addRawArrayEntry(['99','AAXXUUYY']);
+ * 
  * @exemple ❌ bad match selection (we cannot chain matchValue for logical OR, AND,...).Instead use matchValueRegex
  * ```
  * // will not work
@@ -140,14 +148,22 @@ class TableWithHeaderHelper{
   }
   /**
    * Append at the end a the provided row range, width must be the same
-   * @return {Range} a row range @see {@link https://developers.google.com/apps-script/reference/spreadsheet/range}
+   * @param {Range} a existing row range @see {@link https://developers.google.com/apps-script/reference/spreadsheet/range}
    */
   addNewEntry(range){
     if(range.getWidth() != this.width()) throw Error(`The range to add is not the same dimension than this table`);
-    //this.range.getSheet()
+    this.addRawArrayEntry(range.getValues()[0]);
+    return this;
+  }
+  /**
+   * Append at the end a the provided raw table value, width must be the same
+   * @param {Array} an array of value
+   */
+  addRawArrayEntry(array){
+    if(array.length != this.width()) throw Error(`The range to add is not the same dimension than this table`);
     var newRowToFill = this.subRangeRow(this.length()+1);
     
-    newRowToFill.setValues(range.getValues());
+    newRowToFill.setValues([array]);
     this.dataRowList.push(newRowToFill);
     this.dataMatchingList.push(newRowToFill);
     return this;
@@ -327,7 +343,20 @@ function UnitTest(){
   valueTable4.addNewEntry(rowRange);
   test.create("Add Entry",valueTable4.getTableWhereColumn("State").matchValue("109").getWithinColumn("User").cellAtRow(0).getValue(),"baba@rhum.com");
   // reset value
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("M23:O23").clear();
+  SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("M23:O23").deleteCells(SpreadsheetApp.Dimension.COLUMNS);
+
+  
+  var helperTable3 = new TableWithHeaderHelper(table3);
+  var valueTable3 = helperTable3.addRawArrayEntry(['99','AAXXUUYY']);
+  test.create("Add raw  Entry value",valueTable3.getTableWhereColumn("Value").matchValue('99').getWithinColumn("Reulst").cellAtRow(0).getValue(),"AAXXUUYY");
+  test.create("Add raw  Entry value & location",SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("O8:P8").getValues()[0][1],"AAXXUUYY");
+
+  var valueTable3 = helperTable3.addRawArrayEntry(['987','fgdsjklfsdjfklsdj']);
+  test.create("Add raw  Entry value",valueTable3.getTableWhereColumn("Value").matchValue('987').getWithinColumn("Reulst").cellAtRow(0).getValue(),"fgdsjklfsdjfklsdj");
+  test.create("Add raw  Entry value & location",SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("O9:P9").getValues()[0][1],"fgdsjklfsdjfklsdj");
+  // clean
+  SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("O8:P8").clear();
+  SpreadsheetApp.getActiveSpreadsheet().getSheetByName("UnitTesting_SheetTableHelper").getRange("O9:P9").clear();
 
   try{ valueTable.getTableWhereColumn("456987fds!:;"); test.create("error getTableWhereColumn","succes","error");
   }catch {test.create("error getTableWhereColumn","error","error")}
